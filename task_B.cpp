@@ -3,7 +3,7 @@
 #include <string>
 #include <cstdint>
 
-std::vector <int64_t> getManakerVector (const std::string &s, bool flag) {
+std::vector <int64_t> getManakerVector(const std::string &s, bool flag) {
     std::vector <int64_t> v(s.size(), 0);
     size_t n = s.size();
     int64_t l = 0;
@@ -30,7 +30,7 @@ std::vector <int64_t> getManakerVector (const std::string &s, bool flag) {
     return v;
 }
 
-size_t manakerAlgorithm (const std::string &s) {
+size_t manakerAlgorithm(const std::string &s) {
     std::vector <int64_t> d1 = getManakerVector(s, true);  // odd
     std::vector <int64_t> d2 = getManakerVector(s, false); // even
     size_t result = 0;
@@ -40,14 +40,14 @@ size_t manakerAlgorithm (const std::string &s) {
     return result - s.size();
 }
 
-void getInput (
+void getInput(
     std::istream &in,
     std::string &s
 ) {
     in >> s;
 }
 
-void setOutput (
+void setOutput(
     std::ostream &out,
     const size_t &result
 ) {
