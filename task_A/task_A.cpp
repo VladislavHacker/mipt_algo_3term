@@ -16,11 +16,7 @@ std::vector<size_t> findPositions(
     size_t right = 0;
 
     for (size_t i = 1; i < n; ++i) {
-        size_t array_index = i % p;
         size_t z_val = 0;
-        if (i >= pattern.length()) {
-            array_index += pattern.length();
-        }
         if (i <= right) {
             z_val = std::min(right - i + 1, z[i - left]);
         }
