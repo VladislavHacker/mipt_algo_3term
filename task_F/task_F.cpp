@@ -153,9 +153,7 @@ std::string getKStatString(
     int64_t counter = 0;
     int64_t prev_lcp = 0;
     int64_t prev_counter = 0;
-    //for (int64_t i = 0; i < suffix_array.size(); ++i) {
-    //  std::cout << s.substr(suffix_array[i]) << " " << lcp[i] << " " << suffix_array[i] << std::endl;
-    //}
+
     for (int64_t i = 0; i < suffix_array.size(); ++i) {
         if (lcp[i] > 0) {
             int64_t first_suff_size = suffix_array.size() - suffix_array[i];
@@ -168,11 +166,8 @@ std::string getKStatString(
                 ) {
                 counter += lcp[i];
                 counter -= std::min(prev_lcp, lcp[i]);
-                //std::cout << counter << " " << lcp[i] << " " << s.substr(suffix_array[i]) <<  std::endl;
 
-                //std::cout << i << " " << counter << std::endl;
                 if (counter >= k) {
-                    //std::cout << suffix_array[i] << std::endl;
                     result = s.substr(suffix_array[i], k - prev_counter + prev_lcp);
                     break;
                 }
@@ -228,4 +223,3 @@ int main() {
 
     return 0;
 }
-
