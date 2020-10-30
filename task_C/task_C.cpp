@@ -5,11 +5,16 @@
 #include <unordered_map>
 #include <vector>
 #include <functional>
+#include <thread>
+#include <queue>
+#include <chrono>
+#include <mutex>
 
 const int32_t ST_MAX = std::numeric_limits<int32_t>::max(); // max int32_t
 const int32_t RESERVE_TEXT_SIZE = 2000005; // reserve text size for optimization buffer
 const int32_t RESERVE_PATTERN_SIZE = 5000; // reserve pattern size for optimization buffer
 
+std::mutex protect_queue_mutex;
 
 /* Wrapper class for result processing */
 template <typename T>
@@ -17,8 +22,8 @@ class ResultProcessWrapper {
 public:
 
     explicit ResultProcessWrapper (
-        T& container,
-        const std::function<void(T&, size_t)> processor
+            T& container,
+            const std::function<void(T&, size_t)> processor
     ) :
             container(container), processor(processor) {}
 
@@ -100,23 +105,23 @@ public:
     const int32_t& getAutomateMove(const int32_t& vertex, const char& i);
 
     void check(
-        ResultProcessWrapper<T> &out,
-        const std::string &s,
-        const int32_t& v,
-        const int32_t& i,
-        std::vector<std::vector<int32_t>> &patterns_positions,
-        std::vector<int32_t> &patterns_pos_vector_indexes,
-        std::vector<int32_t> &result,
-        const int32_t& pattern_len
+            ResultProcessWrapper<T> &out,
+            const std::string &s,
+            const int32_t& v,
+            const int32_t& i,
+            std::vector<std::vector<int32_t>> &patterns_positions,
+            std::vector<int32_t> &patterns_pos_vector_indexes,
+            std::vector<int32_t> &result,
+            const int32_t& pattern_len
     );
 
     void findPositions(
-        ResultProcessWrapper<T> &out,
-        const std::string& s,
-        std::vector<std::vector<int32_t>> &patterns_positions,
-        std::vector<int32_t> &patterns_pos_vector_indexes,
-        std::vector<int32_t> &result,
-        int32_t pattern_len
+            ResultProcessWrapper<T> &out,
+            const std::string& s,
+            std::vector<std::vector<int32_t>> &patterns_positions,
+            std::vector<int32_t> &patterns_pos_vector_indexes,
+            std::vector<int32_t> &result,
+            int32_t pattern_len
     );
 
 private:
@@ -221,14 +226,14 @@ const int32_t& Trie<T>::getAutomateMove(const int32_t& vertex, const char& i) {
 /* check positions and write to stream results */
 template <typename T>
 void Trie<T>::check(
-    ResultProcessWrapper<T> &out,
-    const std::string &s,
-    const int32_t& v,
-    const int32_t& i,
-    std::vector<std::vector<int32_t>> &patterns_positions,
-    std::vector<int32_t> &patterns_pos_vector_indexes,
-    std::vector<int32_t> &result,
-    const int32_t& pattern_len
+        ResultProcessWrapper<T> &out,
+        const std::string &s,
+        const int32_t& v,
+        const int32_t& i,
+        std::vector<std::vector<int32_t>> &patterns_positions,
+        std::vector<int32_t> &patterns_pos_vector_indexes,
+        std::vector<int32_t> &result,
+        const int32_t& pattern_len
 ) {
     int32_t u = v;
     int32_t patterns_count = patterns_.size();
@@ -264,16 +269,16 @@ void Trie<T>::check(
 
 template <typename T>
 void Trie<T>::findPositions(
-    ResultProcessWrapper<T> &out,
-    const std::string &s,
-    std::vector<std::vector<int32_t>> &patterns_positions,
-    std::vector<int32_t> &patterns_pos_vector_indexes,
-    std::vector<int32_t> &result,
-    int32_t pattern_len
+        ResultProcessWrapper<T> &out,
+        const std::string &s,
+        std::vector<std::vector<int32_t>> &patterns_positions,
+        std::vector<int32_t> &patterns_pos_vector_indexes,
+        std::vector<int32_t> &result,
+        int32_t pattern_len
 ) {
     int32_t now = 0;
     int32_t s_len = s.length();
-    for (int32_t i = 0; i < s_len; ++i){
+    for (int32_t i = 0; i < s_len; ++i) {
         now = getAutomateMove(now, static_cast<char>(s[i] - 'a'));
         check(out, s, now, i, patterns_positions, patterns_pos_vector_indexes, result, pattern_len);
     }
@@ -281,16 +286,16 @@ void Trie<T>::findPositions(
 
 template <typename T>
 Trie<T>::TrieVertex::TrieVertex(
-    int32_t parent,
-    char symbol,
-    size_t alphabet_size
+        int32_t parent,
+        char symbol,
+        size_t alphabet_size
 ) :
-    parent_(parent),
-    symbol_(symbol),
-    suffix_link_(ST_MAX),
-    good_suffix_link_(ST_MAX),
-    pattern_number_(ST_MAX),
-    flag_(false) {
+        parent_(parent),
+        symbol_(symbol),
+        suffix_link_(ST_MAX),
+        good_suffix_link_(ST_MAX),
+        pattern_number_(ST_MAX),
+        flag_(false) {
 
     children_.assign(alphabet_size, ST_MAX);
     automate_move_.assign(alphabet_size, ST_MAX);
@@ -372,12 +377,13 @@ const char& Trie<T>::TrieVertex::getSymbol() const {
     return symbol_;
 }
 
+template <typename T>
 void fillTrieWithPattern(
-    Trie<std::ostream>& Trie,
-    std::string &pattern,
-    std::vector<std::vector<int32_t>> &positions,
-    std::vector<int32_t> &patterns_pos_vector_indexes,
-    bool &has_fictive_symbol
+        Trie<T>& Trie,
+        std::string &pattern,
+        std::vector<std::vector<int32_t>> &positions,
+        std::vector<int32_t> &patterns_pos_vector_indexes,
+        bool &has_fictive_symbol
 ) {
     std::string current;
     int32_t pos = 0;
@@ -424,12 +430,12 @@ void fillTrieWithPattern(
 
 template <typename T>
 void search(
-    ResultProcessWrapper<T> out,
-    std::string &pattern,
-    const std::string &s
+        ResultProcessWrapper<T> out,
+        std::string &pattern,
+        const std::string &s
 ) {
 
-    Trie<std::ostream> Trie;
+    Trie<T> Trie;
     std::vector<std::vector<int32_t>> patterns_positions;
     std::vector<int32_t> patterns_pos_vector_indexes;
     bool has_fictive_symbol = false; // true if we have fictive '?' in the end
@@ -456,6 +462,18 @@ void getInput(
     in >> pattern >> s;
 }
 
+void threadOut(std::queue<size_t>& queue, std::ostream& out, bool& finished) {
+    while (!finished || !queue.empty()) {
+        protect_queue_mutex.lock();
+        while (!queue.empty()) {
+            out << queue.front() << " ";
+            queue.pop();
+        }
+        protect_queue_mutex.unlock();
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+}
+
 int main() {
 
     std::string pattern;
@@ -468,15 +486,26 @@ int main() {
     std::cin.tie(nullptr);
 
     getInput(std::cin, pattern, s);
+    std::queue<size_t> res_queue{};
+
+    bool finished = false;
+    std::thread th(threadOut, std::ref(res_queue), std::ref(std::cout), std::ref(finished));
+
     search(
-        ResultProcessWrapper<std::ostream>(
-            std::cout, [](std::ostream& out, size_t pos){
-                out << pos << " ";
-            }
+        ResultProcessWrapper<std::queue<size_t>>(
+                res_queue,
+                [](std::queue<size_t>& out, size_t pos){
+                    protect_queue_mutex.lock();
+                    out.push(pos);
+                    protect_queue_mutex.unlock();
+                }
         ),
         pattern,
         s
     );
+
+    finished = true;
+    th.join();
 
     return 0;
 
