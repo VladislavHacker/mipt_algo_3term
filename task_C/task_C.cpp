@@ -22,8 +22,8 @@ class ResultProcessWrapper {
 public:
 
     explicit ResultProcessWrapper (
-            T& container,
-            const std::function<void(T&, size_t)> processor
+        T& container,
+        const std::function<void(T&, size_t)> processor
     ) :
             container(container), processor(processor) {}
 
@@ -105,23 +105,23 @@ public:
     const int32_t& getAutomateMove(const int32_t& vertex, const char& i);
 
     void check(
-            ResultProcessWrapper<T> &out,
-            const std::string &s,
-            const int32_t& v,
-            const int32_t& i,
-            std::vector<std::vector<int32_t>> &patterns_positions,
-            std::vector<int32_t> &patterns_pos_vector_indexes,
-            std::vector<int32_t> &result,
-            const int32_t& pattern_len
+        ResultProcessWrapper<T> &out,
+        const std::string &s,
+        const int32_t& v,
+        const int32_t& i,
+        std::vector<std::vector<int32_t>> &patterns_positions,
+        std::vector<int32_t> &patterns_pos_vector_indexes,
+        std::vector<int32_t> &result,
+        const int32_t& pattern_len
     );
 
     void findPositions(
-            ResultProcessWrapper<T> &out,
-            const std::string& s,
-            std::vector<std::vector<int32_t>> &patterns_positions,
-            std::vector<int32_t> &patterns_pos_vector_indexes,
-            std::vector<int32_t> &result,
-            int32_t pattern_len
+        ResultProcessWrapper<T> &out,
+        const std::string& s,
+        std::vector<std::vector<int32_t>> &patterns_positions,
+        std::vector<int32_t> &patterns_pos_vector_indexes,
+        std::vector<int32_t> &result,
+        int32_t pattern_len
     );
 
 private:
@@ -177,8 +177,8 @@ const int32_t& Trie<T>::getSuffixLink(const int32_t& vertex) {
         } else {
             Trie_[vertex].setSuffix (
                     getAutomateMove (
-                            getSuffixLink(Trie_[vertex].getParent()),
-                            Trie_[vertex].getSymbol()
+                        getSuffixLink(Trie_[vertex].getParent()),
+                        Trie_[vertex].getSymbol()
                     )
             );
         }
@@ -195,7 +195,7 @@ const int32_t& Trie<T>::getGoodSuffixLink(const int32_t& vertex) {
             Trie_[vertex].setGoodSuffix(0);
         } else {
             Trie_[vertex].setGoodSuffix(
-                    Trie_[u].getFlag() ? u : getGoodSuffixLink(u)
+                Trie_[u].getFlag() ? u : getGoodSuffixLink(u)
             );
         }
     }
@@ -208,15 +208,15 @@ const int32_t& Trie<T>::getAutomateMove(const int32_t& vertex, const char& i) {
     if (Trie_[vertex].getAutomateMove(i) == ST_MAX) {
         if (Trie_[vertex].getLetterChild(i) != ST_MAX) {
             Trie_[vertex].setAutomateMove (
-                    i,
-                    Trie_[vertex].getLetterChild(i)
+                i,
+                Trie_[vertex].getLetterChild(i)
             );
         } else if (vertex == 0) {
             Trie_[vertex].setAutomateMove(i, 0);
         } else {
             Trie_[vertex].setAutomateMove(
-                    i,
-                    getAutomateMove(getSuffixLink(vertex), i)
+                i,
+                getAutomateMove(getSuffixLink(vertex), i)
             );
         }
     }
@@ -226,14 +226,14 @@ const int32_t& Trie<T>::getAutomateMove(const int32_t& vertex, const char& i) {
 /* check positions and write to stream results */
 template <typename T>
 void Trie<T>::check(
-        ResultProcessWrapper<T> &out,
-        const std::string &s,
-        const int32_t& v,
-        const int32_t& i,
-        std::vector<std::vector<int32_t>> &patterns_positions,
-        std::vector<int32_t> &patterns_pos_vector_indexes,
-        std::vector<int32_t> &result,
-        const int32_t& pattern_len
+    ResultProcessWrapper<T> &out,
+    const std::string &s,
+    const int32_t& v,
+    const int32_t& i,
+    std::vector<std::vector<int32_t>> &patterns_positions,
+    std::vector<int32_t> &patterns_pos_vector_indexes,
+    std::vector<int32_t> &result,
+    const int32_t& pattern_len
 ) {
     int32_t u = v;
     int32_t patterns_count = patterns_.size();
@@ -253,7 +253,7 @@ void Trie<T>::check(
                             Trie_[u].getPatternNumber() == patterns_last &&
                             result[index] == patterns_count &&
                             index <= s_len - pattern_len
-                            ) {
+                    ) {
                         out.process(index);
                         result[index] = 0;
                     }
@@ -269,12 +269,12 @@ void Trie<T>::check(
 
 template <typename T>
 void Trie<T>::findPositions(
-        ResultProcessWrapper<T> &out,
-        const std::string &s,
-        std::vector<std::vector<int32_t>> &patterns_positions,
-        std::vector<int32_t> &patterns_pos_vector_indexes,
-        std::vector<int32_t> &result,
-        int32_t pattern_len
+    ResultProcessWrapper<T> &out,
+    const std::string &s,
+    std::vector<std::vector<int32_t>> &patterns_positions,
+    std::vector<int32_t> &patterns_pos_vector_indexes,
+    std::vector<int32_t> &result,
+    int32_t pattern_len
 ) {
     int32_t now = 0;
     int32_t s_len = s.length();
@@ -286,16 +286,16 @@ void Trie<T>::findPositions(
 
 template <typename T>
 Trie<T>::TrieVertex::TrieVertex(
-        int32_t parent,
-        char symbol,
-        size_t alphabet_size
+    int32_t parent,
+    char symbol,
+    size_t alphabet_size
 ) :
-        parent_(parent),
-        symbol_(symbol),
-        suffix_link_(ST_MAX),
-        good_suffix_link_(ST_MAX),
-        pattern_number_(ST_MAX),
-        flag_(false) {
+    parent_(parent),
+    symbol_(symbol),
+    suffix_link_(ST_MAX),
+    good_suffix_link_(ST_MAX),
+    pattern_number_(ST_MAX),
+    flag_(false) {
 
     children_.assign(alphabet_size, ST_MAX);
     automate_move_.assign(alphabet_size, ST_MAX);
@@ -379,11 +379,11 @@ const char& Trie<T>::TrieVertex::getSymbol() const {
 
 template <typename T>
 void fillTrieWithPattern(
-        Trie<T>& Trie,
-        std::string &pattern,
-        std::vector<std::vector<int32_t>> &positions,
-        std::vector<int32_t> &patterns_pos_vector_indexes,
-        bool &has_fictive_symbol
+    Trie<T>& Trie,
+    std::string &pattern,
+    std::vector<std::vector<int32_t>> &positions,
+    std::vector<int32_t> &patterns_pos_vector_indexes,
+    bool &has_fictive_symbol
 ) {
     std::string current;
     int32_t pos = 0;
@@ -430,9 +430,9 @@ void fillTrieWithPattern(
 
 template <typename T>
 void search(
-        ResultProcessWrapper<T> out,
-        std::string &pattern,
-        const std::string &s
+    ResultProcessWrapper<T> out,
+    std::string &pattern,
+    const std::string &s
 ) {
 
     Trie<T> Trie;
@@ -444,12 +444,12 @@ void search(
 
     std::vector<int32_t> result(s.length(), 0);
     Trie.findPositions(
-            out,
-            s,
-            patterns_positions,
-            patterns_pos_vector_indexes,
-            result,
-            pattern.length() - static_cast<int32_t>(has_fictive_symbol)
+        out,
+        s,
+        patterns_positions,
+        patterns_pos_vector_indexes,
+        result,
+        pattern.length() - static_cast<int32_t>(has_fictive_symbol)
     );
 
 }
@@ -493,12 +493,12 @@ int main() {
 
     search(
         ResultProcessWrapper<std::queue<size_t>>(
-                res_queue,
-                [](std::queue<size_t>& out, size_t pos){
-                    protect_queue_mutex.lock();
-                    out.push(pos);
-                    protect_queue_mutex.unlock();
-                }
+            res_queue,
+            [](std::queue<size_t>& out, size_t pos){
+                protect_queue_mutex.lock();
+                out.push(pos);
+                protect_queue_mutex.unlock();
+            }
         ),
         pattern,
         s
