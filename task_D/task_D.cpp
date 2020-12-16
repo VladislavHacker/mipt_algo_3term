@@ -1,10 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <unordered_map>
-#include <functional>
 #include <numeric>
-#include <map>
 
 std::vector<int64_t> calculateLCP(
     const std::string &s,
@@ -29,7 +26,7 @@ std::vector<int64_t> calculateLCP(
                 current_lcp + (i > next ? i : next) < n &&
                 s[i + current_lcp] == s[next + current_lcp]
             ) {
-                current_lcp++;
+                ++current_lcp;
             }
             lcp[inverse_suffix_array[i]] = current_lcp;
             current_lcp = (current_lcp - 1 > 0l ? current_lcp - 1 : 0);
@@ -51,7 +48,7 @@ std::vector<int64_t> buildSuffixArray(
     int64_t equivalence_classes_count = 0;
     int64_t sort_counter = 0;
 
-    std::map< int64_t, std::vector <int64_t> > class_helper;
+    std::vector< std::vector <int64_t> > class_helper(256);
 
     std::accumulate(
         s.begin(),
@@ -71,11 +68,13 @@ std::vector<int64_t> buildSuffixArray(
         class_helper.end(),
         std::vector<int64_t>(n),
         [&] (std::vector<int64_t>& classes, auto &element) -> std::vector<int64_t>& {
-            for (int64_t u : element.second) {
+            for (int64_t u : element) {
                 classes[u] = equivalence_classes_count;
                 suffix_array[sort_counter++] = u;
             }
-            ++equivalence_classes_count;
+            if (element.size() != 0) {
+                ++equivalence_classes_count;
+            }
             return classes;
         }
     );
@@ -123,37 +122,36 @@ std::vector<int64_t> buildSuffixArray(
 
 }
 
+std::vector<int64_t> inverseSuffixArray(
+    std::vector<int64_t>& suffix_array
+) {
+    std::vector<int64_t> inverse_suffix_array(suffix_array.size());
+    std::accumulate(
+            suffix_array.begin(),
+            suffix_array.end(),
+            static_cast<uint64_t>(0),
+            [&] (int64_t index, int64_t element) -> uint64_t {
+                inverse_suffix_array[element] = index;
+                return ++index;
+            }
+    );
+    return inverse_suffix_array;
+}
+
 size_t getUniqueSubstringsCount(
     std::string& s
 ) {
 
     std::vector<int64_t> suffix_array = buildSuffixArray(s);
-    std::vector<int64_t> inverse_suffix_array(suffix_array.size());
-
-    std::accumulate(
-        suffix_array.begin(),
-        suffix_array.end(),
-        static_cast<uint64_t>(0),
-        [&] (int64_t index, int64_t element) -> uint64_t {
-            inverse_suffix_array[element] = index;
-            return ++index;
-        }
-    );
+    std::vector<int64_t> inverse_suffix_array = inverseSuffixArray(suffix_array);
 
     std::vector<int64_t>  lcp = calculateLCP(
-            s,
-            inverse_suffix_array,
-            suffix_array
+        s,
+        inverse_suffix_array,
+        suffix_array
     );
 
-    int64_t one = std::accumulate(
-        suffix_array.begin(),
-        suffix_array.end(),
-        0,
-        [&] (int64_t res, int64_t element) -> int64_t {
-            return res + suffix_array.size() - element;
-        }
-    );
+    int64_t one = suffix_array.size() * suffix_array.size()  - (suffix_array.size()  * (suffix_array.size() - 1)) / 2;
 
     int64_t two = std::accumulate(
         lcp.begin(),
