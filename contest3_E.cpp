@@ -1,10 +1,9 @@
-#include <iostream>
 #include <algorithm>
-#include <vector>
-#include <cstdint>
-#include <unordered_set>
-#include <iomanip>
 #include <set>
+#include <unordered_set>
+#include <vector>
+#include <iostream>
+#include <iomanip>
 
 enum {
     start = 1,
@@ -38,10 +37,10 @@ public:
     }
 
     /* copy assignment operator */
-    Point& operator = (const Point& other) = default;
+    Point& operator=(const Point& other) = default;
 
     /* move assignment operator */
-    Point& operator = (Point&& other)  noexcept {
+    Point& operator=(Point&& other)  noexcept {
         if (&other != this) {
             x_ = other.x_;
             y_ = other.y_;
@@ -54,7 +53,7 @@ public:
     Point(T x, T y) : x_(x), y_(y) { }
 
     /* >> overloaded operator */
-    friend std::istream& operator >> (
+    friend std::istream& operator>>(
             std::istream& in,
             Point& point
     ) {
@@ -70,64 +69,64 @@ public:
         return y_;
     }
 
-    Point& operator *= (T a) {
+    Point& operator*=(T a) {
         x_ *= a;
         y_ *= a;
         return *this;
     }
 
-    Point& operator * (T a) {
+    Point& operator*(T a) {
         Point res = *this;
         return (res *= a);
     }
 
-    Point& operator - () {
+    Point& operator-() {
         return *this * -1;
     }
 
-    Point& operator += (const Point& other) {
+    Point& operator+=(const Point& other) {
         x_ += other.x_;
         y_ += other.y_;
         return *this;
     }
 
-    Point& operator -= (const Point& other) {
+    Point& operator-=(const Point& other) {
         x_ -= other.x_;
         y_ -= other.y_;
         return *this;
     }
 
-    Point operator + (const Point& other) {
+    Point operator+(const Point& other) {
         Point res = *this;
         return (res += other);
     }
 
-    Point operator - (const Point& other) {
+    Point operator-(const Point& other) {
         Point res = *this;
         return (res -= other);
     }
 
-    bool operator < (const Point& other) const {
+    bool operator<(const Point& other) const {
         return x_ < other.x_ || (std::abs(x_ - other.x_) < EPSILON && y_ < other.y_);
     }
 
-    bool operator > (const Point& other) const {
+    bool operator>(const Point& other) const {
         return other < *this;
     }
 
-    bool operator <= (const Point& other) const {
+    bool operator<=(const Point& other) const {
         return !(*this > other);
     }
 
-    bool operator >= (const Point& other) const {
+    bool operator>=(const Point& other) const {
         return !(*this < other);
     }
 
-    bool operator == (const Point& other) const {
+    bool operator==(const Point& other) const {
         return !(*this < other) && !(*this > other);
     }
 
-    bool operator != (const Point& other) const {
+    bool operator!=(const Point& other) const {
         return !(*this == other);
     }
 
@@ -166,7 +165,7 @@ public:
     }
 
     bool isIntersect(const LineSegment& other) const {
-        return intersect(start_, end_, other.start_, other.end_);
+        return intersect_(start_, end_, other.start_, other.end_);
     }
 
     bool isHorizontal() {
@@ -186,7 +185,7 @@ public:
         return in;
     }
 
-    bool operator < (const LineSegment<T>& other) const {
+    bool operator<(const LineSegment<T>& other) const {
         T x = std::max(
             std::min(start_.getX(), end_.getX()), std::min(other.start_.getX(), other.end_.getX())
         );
@@ -223,49 +222,49 @@ public:
 
 private:
 
-    static T max(T x, T y){
+    static T max_(T x, T y){
         return x > y ? x : y;
     }
 
-    static T min(T x, T y){
+    static T min_(T x, T y){
         return x < y ? x : y;
     }
 
-    static T det(T a, T b, T c, T d) {
+    static T det_(T a, T b, T c, T d) {
         return a * d - b * c;
     }
 
-    static bool between(T a, T b, T c) {
-        return min(a, b) <= c + EPSILON && c <= max(a, b) + EPSILON;
+    static bool between_(T a, T b, T c) {
+        return min_(a, b) <= c + EPSILON && c <= max_(a, b) + EPSILON;
     }
 
-    static bool intersectParallels(T a, T b, T c, T d) {
+    static bool intersectParallels_(T a, T b, T c, T d) {
         if (a > b)  {
             std::swap(a, b);
         }
         if (c > d) {
             std::swap(c, d);
         }
-        return max(a, c) <= min(b, d);
+        return max_(a, c) <= min_(b, d);
     }
 
-    static bool intersect(const Point<T> &a, const Point<T>& b, const Point<T>& c, const Point<T>& d) {
+    static bool intersect_(const Point<T> &a, const Point<T>& b, const Point<T>& c, const Point<T>& d) {
         T A1 = a.getY() - b.getY();
         T B1 = b.getX() - a.getX();
         T C1 = -A1 * a.getX() - B1 * a.getY();
         T A2 = c.getY() - d.getY();
         T B2 = d.getX() - c.getX();
         T C2 = -A2 * c.getX() - B2 * c.getY();
-        T delta = det (A1, B1, A2, B2);
+        T delta = det_(A1, B1, A2, B2);
         if (delta >= EPSILON || delta <= -EPSILON) {
-            long double x = - det(C1, B1, C2, B2) * 1.0 / delta;
-            long double y = - det(A1, C1, A2, C2) * 1.0 / delta;
-            return between(a.getX(), b.getX(), x) && between(a.getY(), b.getY(), y)
-                   && between(c.getX(), d.getX(), x) && between (c.getY(), d.getY(), y);
+            long double x = - det_(C1, B1, C2, B2) * 1.0 / delta;
+            long double y = - det_(A1, C1, A2, C2) * 1.0 / delta;
+            return between_(a.getX(), b.getX(), x) && between_(a.getY(), b.getY(), y)
+                   && between_(c.getX(), d.getX(), x) && between_(c.getY(), d.getY(), y);
         } else {
-            return (det(A1, C1, A2, C2) == 0 && det(B1, C1, B2, C2) == 0)
-                   && (intersectParallels(a.getX(), b.getX(), c.getX(), d.getX())
-                       && intersectParallels(a.getY(), b.getY(), c.getY(), d.getY()));
+            return (det_(A1, C1, A2, C2) == 0 && det_(B1, C1, B2, C2) == 0)
+                   && (intersectParallels_(a.getX(), b.getX(), c.getX(), d.getX())
+                       && intersectParallels_(a.getY(), b.getY(), c.getY(), d.getY()));
         }
     }
 
@@ -371,7 +370,9 @@ bool findIntersection(
         }
 
     }
-
+    if (intersection.first > intersection.second) {
+        std::swap(intersection.first, intersection.second);
+    }
     return false;
 }
 
@@ -396,11 +397,7 @@ int main() {
 
     if (findIntersection(segments, result_ids)) {
         std::cout << "YES" << std::endl;
-        if (result_ids.first < result_ids.second) {
-            std::cout << result_ids.first + 1 << " " << result_ids.second + 1;
-        } else {
-            std::cout << result_ids.second + 1 << " " << result_ids.first + 1;
-        }
+        std::cout << result_ids.first + 1 << " " << result_ids.second + 1;
     } else {
         std::cout << "NO" << std::endl;
     }
