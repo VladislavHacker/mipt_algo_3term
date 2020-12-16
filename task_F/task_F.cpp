@@ -1,10 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <unordered_map>
-#include <functional>
 #include <numeric>
-#include <map>
 
 std::vector<int64_t> calculateLCP(
     const std::string &s,
@@ -12,7 +9,7 @@ std::vector<int64_t> calculateLCP(
     const std::vector<int64_t> &suffix_array
 ) {
 
-    std::vector<int64_t> lcp(s.size(), 0);
+    std::vector<int64_t> lcp(s.size());
 
     size_t n = s.size();
     int64_t current_lcp = 0;
@@ -28,8 +25,8 @@ std::vector<int64_t> calculateLCP(
             while (
                     current_lcp + (i > next ? i : next) < n &&
                     s[i + current_lcp] == s[next + current_lcp]
-            ) {
-                current_lcp++;
+                    ) {
+                ++current_lcp;
             }
             lcp[inverse_suffix_array[i]] = current_lcp;
             current_lcp = (current_lcp - 1 > 0l ? current_lcp - 1 : 0);
@@ -42,42 +39,44 @@ std::vector<int64_t> calculateLCP(
 
 
 std::vector<int64_t> buildSuffixArray(
-        std::string s
+    std::string s
 ) {
 
-    s += "#";
+    s += "$";
 
     int64_t n = s.size();
     int64_t equivalence_classes_count = 0;
     int64_t sort_counter = 0;
 
-    std::map< int64_t, std::vector <int64_t> > class_helper;
+    std::vector< std::vector <int64_t> > class_helper(256);
 
     std::accumulate(
-            s.begin(),
-            s.end(),
-            0,
-            [&] (int64_t index, char el) -> int64_t {
-                class_helper[el].emplace_back(index);
-                return ++index;
-            }
+        s.begin(),
+        s.end(),
+        0,
+        [&] (int64_t index, char el) -> int64_t {
+            class_helper[el].emplace_back(index);
+            return ++index;
+        }
     );
 
     std::vector<int64_t> suffix_array(n);
 
     /* zero step */
     std::vector<int64_t> classes = std::accumulate(
-            class_helper.begin(),
-            class_helper.end(),
-            std::vector<int64_t>(n),
-            [&] (std::vector<int64_t>& classes, auto &element) -> std::vector<int64_t>& {
-                for (int64_t u : element.second) {
-                    classes[u] = equivalence_classes_count;
-                    suffix_array[sort_counter++] = u;
-                }
-                ++equivalence_classes_count;
-                return classes;
+        class_helper.begin(),
+        class_helper.end(),
+        std::vector<int64_t>(n),
+        [&] (std::vector<int64_t>& classes, auto &element) -> std::vector<int64_t>& {
+            for (int64_t u : element) {
+                classes[u] = equivalence_classes_count;
+                suffix_array[sort_counter++] = u;
             }
+            if (element.size() != 0) {
+                ++equivalence_classes_count;
+            }
+            return classes;
+        }
     );
 
     // get unique suffixes
@@ -103,7 +102,7 @@ std::vector<int64_t> buildSuffixArray(
                 if (
                         j == 0 ||
                         classes[(a[i][j - 1] + d) % n] != classes[(a[i][j] + d) % n]
-                        ) {
+                ) {
                     ++new_classes_count;
                 }
                 new_classes[a[i][j]] = new_classes_count - 1;
@@ -117,22 +116,16 @@ std::vector<int64_t> buildSuffixArray(
     }
 
     return std::vector<int64_t>(
-            suffix_array.begin() + 1,
-            suffix_array.end()
+        suffix_array.begin() + 1,
+        suffix_array.end()
     );
 
 }
 
-std::string getKStatString(
-    const std::string& first_string,
-    const std::string& second_string,
-    const int64_t& k
+std::vector<int64_t> inverseSuffixArray(
+    std::vector<int64_t>& suffix_array
 ) {
-
-    std::string s = first_string + '$' + second_string;
-    std::vector<int64_t> suffix_array = buildSuffixArray(s);
-    std::vector<int64_t> inverse_suffix_array(suffix_array.size() + 1, 0);
-
+    std::vector<int64_t> inverse_suffix_array(suffix_array.size());
     std::accumulate(
         suffix_array.begin(),
         suffix_array.end(),
@@ -142,6 +135,19 @@ std::string getKStatString(
             return ++index;
         }
     );
+    return inverse_suffix_array;
+}
+
+std::string getKStatString(
+    const std::string& first_string,
+    const std::string& second_string,
+    const int64_t& k
+) {
+
+    std::string s = first_string + '$' + second_string;
+
+    std::vector<int64_t> suffix_array = buildSuffixArray(s);
+    std::vector<int64_t> inverse_suffix_array = inverseSuffixArray(suffix_array);
 
     std::vector<int64_t>  lcp = calculateLCP(
         s,
@@ -159,14 +165,13 @@ std::string getKStatString(
             int64_t first_suff_size = suffix_array.size() - suffix_array[i];
             int64_t second_suff_size = suffix_array.size() - suffix_array[i + 1];
             if (
-                (first_suff_size > second_string.size() + 1 &&
-                second_suff_size <= second_string.size()) ||
-                (second_suff_size > second_string.size() + 1 &&
-                 first_suff_size <= second_string.size())
-                ) {
+                    (first_suff_size > second_string.size() + 1 &&
+                     second_suff_size <= second_string.size()) ||
+                    (second_suff_size > second_string.size() + 1 &&
+                     first_suff_size <= second_string.size())
+            ) {
                 counter += lcp[i];
                 counter -= std::min(prev_lcp, lcp[i]);
-
                 if (counter >= k) {
                     result = s.substr(suffix_array[i], k - prev_counter + prev_lcp);
                     break;
@@ -176,10 +181,8 @@ std::string getKStatString(
             } else {
                 prev_lcp = std::min(lcp[i], prev_lcp);
             }
-
-
         } else {
-           prev_lcp = 0;
+            prev_lcp = 0;
         }
     }
 
