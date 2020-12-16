@@ -35,54 +35,64 @@ public:
 class SuffixTree {
 public:
 
-    SuffixTree(const std::string& source, int64_t first_length)
+    SuffixTree(const std::string& source, int64_t first_length_)
         :
-            first_length(first_length),
+            first_length_(first_length_),
             source_(source),
-            size(0),
-            current_position(0),
-            source_length(source.length()),
-            state_(0, 0)
+            size_(2),
+            current_position_(0),
+            source_length_(source.length()),
+            state_(0, 0),
+            tree_(source.length() << 2)
     {
-        tree_.resize(source_length << 2); // * 2
         TreeVertex root;
         tree_[0] = root;
-        size = 2;
-        build();
+        build_();
     }
 
-    int64_t getSize() const {
-        return size;
+    int64_t getsize_() const {
+        return size_;
     }
     /* DFS with callback */
     void dfs(
         std::vector<int64_t>& re_num,
-        std::vector<char>& used,
         const std::function<
-                void(std::vector<TreeVertex>&, int64_t&, int64_t&)
-        > &callback,
-        int64_t vertex_number,
-        int64_t &i
+                void(const std::vector<TreeVertex>&, int64_t&, int64_t&)
+        > &callback
     ) {
-        used[vertex_number] = in_use;
-        if (vertex_number > 0) {
-            re_num[vertex_number] = i;
-            callback(tree_, vertex_number, first_length);
-            ++i;
-        }
-        for (auto elem : tree_[vertex_number].next_) {
-            if (used[elem.second] == not_used) {
-                dfs(re_num, used, callback, elem.second, i);
-            }
-        }
+        std::vector<char> used(getsize_(), not_used);
+        int64_t i = 1;
+        dfs_(re_num, used, callback, 0, i);
     }
 
 private:
 
-    void build() {
+    void dfs_(
+            std::vector<int64_t>& re_num,
+            std::vector<char>& used,
+            const std::function<
+                    void(const std::vector<TreeVertex>&, int64_t&, int64_t&)
+            > &callback,
+            int64_t vertex_number,
+            int64_t &i
+    ) {
+        used[vertex_number] = in_use;
+        if (vertex_number > 0) {
+            re_num[vertex_number] = i;
+            callback(tree_, vertex_number, first_length_);
+            ++i;
+        }
+        for (auto elem : tree_[vertex_number].next_) {
+            if (used[elem.second] == not_used) {
+                dfs_(re_num, used, callback, elem.second, i);
+            }
+        }
+    }
+
+    void build_() {
 
         for (int64_t i = 2; i < tree_.size(); ++i) {
-            tree_[i].right_ = source_length - 1;
+            tree_[i].right_ = source_length_ - 1;
         }
 
         std::string letters = "qazwsxedcrfvtgbyhnujmikolp";
@@ -96,12 +106,12 @@ private:
         tree_[0].link_ = 1;
 
         for (char& i : source_) {
-            insertLetter(i);
-            ++current_position;
+            insertLetter_(i);
+            ++current_position_;
         }
     }
 
-    void insertLetter(const char& symbol) {
+    void insertLetter_(const char& symbol) {
 
         bool continueFlag;
 
@@ -113,10 +123,10 @@ private:
             if (state_.position_ > tree_[state_.node_].right_) {
 
                 if (tree_[state_.node_].next_.find(symbol) == tree_[state_.node_].next_.end()) {
-                    tree_[state_.node_].next_[symbol] = size;
-                    tree_[size].left_ = current_position;
-                    tree_[size].parent_ = state_.node_;
-                    ++size;
+                    tree_[state_.node_].next_[symbol] = size_;
+                    tree_[size_].left_ = current_position_;
+                    tree_[size_].parent_ = state_.node_;
+                    ++size_;
                     state_.node_ = tree_[state_.node_].link_;
                     state_.position_ = tree_[state_.node_].right_ + 1;
                     continueFlag = true;
@@ -133,33 +143,33 @@ private:
                     ++state_.position_;
                 } else {
 
-                    tree_[size] = TreeVertex(tree_[state_.node_].left_, state_.position_ - 1, tree_[state_.node_].parent_);
-                    tree_[size].next_[source_[state_.position_]] = state_.node_;
+                    tree_[size_] = TreeVertex(tree_[state_.node_].left_, state_.position_ - 1, tree_[state_.node_].parent_);
+                    tree_[size_].next_[source_[state_.position_]] = state_.node_;
 
-                    tree_[size].next_[symbol] = size + 1;
-                    tree_[size + 1].left_ = current_position;
-                    tree_[size + 1].parent_ = size;
+                    tree_[size_].next_[symbol] = size_ + 1;
+                    tree_[size_ + 1].left_ = current_position_;
+                    tree_[size_ + 1].parent_ = size_;
 
                     tree_[state_.node_].left_ = state_.position_;
-                    tree_[state_.node_].parent_ = size;
-                    tree_[tree_[size].parent_].next_[source_[tree_[size].left_]] = size;
-                    size += 2;
+                    tree_[state_.node_].parent_ = size_;
+                    tree_[tree_[size_].parent_].next_[source_[tree_[size_].left_]] = size_;
+                    size_ += 2;
 
-                    state_.node_ = tree_[tree_[size - 2].parent_].link_;
-                    state_.position_ = tree_[size - 2].left_;
+                    state_.node_ = tree_[tree_[size_ - 2].parent_].link_;
+                    state_.position_ = tree_[size_ - 2].left_;
 
-                    while (tree_[size - 2].right_ >= state_.position_) {
+                    while (tree_[size_ - 2].right_ >= state_.position_) {
                         state_.node_ = tree_[state_.node_].next_[source_[state_.position_]];
                         state_.position_ += 1 + tree_[state_.node_].right_ - tree_[state_.node_].left_;
                     }
 
-                    if (state_.position_ == tree_[size - 2].right_ + 1) {
-                        tree_[size - 2].link_ = state_.node_;
+                    if (state_.position_ == tree_[size_ - 2].right_ + 1) {
+                        tree_[size_ - 2].link_ = state_.node_;
                     } else {
-                        tree_[size - 2].link_ = size;
+                        tree_[size_ - 2].link_ = size_;
                     }
 
-                    state_.position_ = tree_[state_.node_].right_ - (state_.position_ - tree_[size - 2].right_) + 2;
+                    state_.position_ = tree_[state_.node_].right_ - (state_.position_ - tree_[size_ - 2].right_) + 2;
                     continueFlag = true;
 
                 }
@@ -170,10 +180,10 @@ private:
 
     std::vector<TreeVertex> tree_;
 
-    int64_t current_position;
-    int64_t source_length;
-    int64_t first_length;
-    int64_t size;
+    int64_t current_position_;
+    int64_t source_length_;
+    int64_t first_length_;
+    int64_t size_;
 
     std::string source_;
 
@@ -192,17 +202,15 @@ void getResultToStream(
         firstString.length()
     );
 
-    std::vector<int64_t> re_num(suffix_tree.getSize(), 0);
-    std::vector<char> used(suffix_tree.getSize(), not_used);
+    std::vector<int64_t> re_num(suffix_tree.getsize_(), 0);
 
     re_num[0] = 0;
 
-    out << suffix_tree.getSize() - 1 << "\n";
-    int64_t i = 1;
+    out << suffix_tree.getsize_() - 1 << "\n";
+
     suffix_tree.dfs(
         re_num,
-        used,
-        [&] (std::vector<TreeVertex>& tree, int64_t& vertex_number, int64_t& first_len) {
+        [&] (const std::vector<TreeVertex>& tree, int64_t& vertex_number, int64_t& first_len) {
             out << re_num[tree[vertex_number].parent_] << " ";
             if (tree[vertex_number].left_ < first_len) {
                 out << 0 << " ";
@@ -220,19 +228,17 @@ void getResultToStream(
                 out <<  tree[vertex_number].right_ - first_len + 1;
                 out << "\n";
             }
-        },
-        0,
-        i
+        }
     );
 
 }
 
 void getInput(
     std::istream& in,
-    std::string& firstString,
-    std::string& secondString
+    std::string& first_string,
+    std::string& second_string
 ) {
-    in >> firstString >> secondString;
+    in >> first_string >> second_string;
 }
 
 int main() {
@@ -240,11 +246,11 @@ int main() {
     std::ios_base::sync_with_stdio(false);
     std::cin.tie(nullptr);
 
-    std::string firstString, secondString;
+    std::string first_string, second_string;
 
-    getInput(std::cin, firstString, secondString);
+    getInput(std::cin, first_string, second_string);
 
-    getResultToStream(std::cout, firstString, secondString);
+    getResultToStream(std::cout, first_string, second_string);
 
     return 0;
 }
