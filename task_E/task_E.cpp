@@ -1,6 +1,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 #include <cstdint>
 #include <functional>
@@ -9,6 +10,8 @@ enum {
     in_use = 1,
     not_used = 0
 };
+
+const std::string ALPHABET("qazwsxedcrfvtgbyhnujmikolp");
 
 class TreeVertex {
 public:
@@ -35,15 +38,16 @@ public:
 class SuffixTree {
 public:
 
-    SuffixTree(const std::string& source, int64_t first_length_)
+    SuffixTree(std::string alphabet, const std::string& source, int64_t first_length)
         :
-            first_length_(first_length_),
+            first_length_(first_length),
             source_(source),
             size_(2),
             current_position_(0),
             source_length_(source.length()),
             state_(0, 0),
-            tree_(source.length() << 2)
+            tree_(source.length() << 2),
+            letters_(std::move(alphabet))
     {
         TreeVertex root;
         tree_[0] = root;
@@ -95,8 +99,7 @@ private:
             tree_[i].right_ = source_length_ - 1;
         }
 
-        std::string letters = "qazwsxedcrfvtgbyhnujmikolp";
-        for (char ch : letters) {
+        for (char ch : letters_) {
             tree_[1].next_[ch] = 0;
         }
 
@@ -188,6 +191,7 @@ private:
     std::string source_;
 
     State state_;
+    std::string letters_;
 
 };
 
@@ -198,6 +202,7 @@ void getResultToStream(
 ) {
 
     SuffixTree suffix_tree(
+        ALPHABET,
         firstString + secondString,
         firstString.length()
     );
