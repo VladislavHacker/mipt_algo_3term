@@ -1,7 +1,8 @@
-#include <iostream>
-#include <vector>
 #include <algorithm>
 #include <cmath>
+#include <functional>
+#include <vector>
+#include <iostream>
 #include <iomanip>
 
 class Point {
@@ -20,7 +21,7 @@ public:
     }
 
     /* move constructor */
-    Point(Point&& other)  noexcept {
+    Point(Point&& other) noexcept {
         x_ = other.x_;
         y_ = other.y_;
         other.x_ = 0;
@@ -28,14 +29,14 @@ public:
     }
 
     /* copy assignment operator */
-    Point& operator = (const Point& other) = default;
+    Point& operator=(const Point& other) = default;
 
-    bool operator < (const Point& other) const {
+    bool operator<(const Point& other) const {
         return getX() < other.getX() || getX() == other.getX() && getY() < other.getY();
     }
 
     /* move assignment operator */
-    Point& operator = (Point&& other)  noexcept {
+    Point& operator=(Point&& other)  noexcept {
         if (&other != this) {
             x_ = other.x_;
             y_ = other.y_;
@@ -48,7 +49,7 @@ public:
     Point(double x, double y) : x_(x), y_(y) { }
 
     /* >> overloaded operator */
-    friend std::istream& operator >> (
+    friend std::istream& operator>>(
             std::istream& in,
             Point& segment
     ) {
@@ -83,6 +84,25 @@ bool greaterZero(const Point& a, const Point& b, const Point& c) {
     return calc(a, b, c) > 0;
 }
 
+void buildStep(
+    const std::function<bool(const Point&, const Point&, const Point&)> &checker,
+    const std::vector<Point> &points,
+    size_t i,
+    const Point& point1,
+    const Point& point2,
+    std::vector<Point>& result
+) {
+    if (points.size() - 1 == i || checker(point1, points[i], point2)) {
+        while (
+            result.size() >= 2 &&
+            !checker(result[result.size() - 2], result[result.size() - 1], points[i])
+        ) {
+            result.pop_back();
+        }
+        result.push_back(points[i]);
+    }
+}
+
 void convexHull(std::vector<Point> points, std::vector<Point>& result) {
     if (points.size() <= 1) {
         return;
@@ -95,24 +115,8 @@ void convexHull(std::vector<Point> points, std::vector<Point>& result) {
     up.push_back(point1);
     down.push_back(point1);
     for (size_t i = 1; i < points.size(); ++i) {
-        if (points.size() - 1 == i || lessZero(point1, points[i], point2)) {
-            while (
-                up.size() >= 2 &&
-                !lessZero(up[up.size() - 2], up[up.size() - 1], points[i])
-            ) {
-                up.pop_back();
-            }
-            up.push_back(points[i]);
-        }
-        if (points.size() - 1 == i || greaterZero(point1, points[i], point2)) {
-            while (
-                down.size() >= 2 &&
-                !greaterZero(down[down.size() - 2], down[down.size() - 1], points[i])
-            ) {
-                down.pop_back();
-            }
-            down.push_back(points[i]);
-        }
+        buildStep(lessZero, points, i,point1, point2,up);
+        buildStep(greaterZero, points, i, point1, point2, down);
     }
     for (auto & i : up) {
         result.push_back(i);
@@ -134,12 +138,16 @@ void getInput(
     }
 }
 
+double calculateDistance(const Point& first, const Point& second) {
+    double a = first.getX() - second.getX();
+    double b = first.getY() - second.getY();
+    return pow(a * a + b * b, 0.5);
+}
+
 double calcLength(std::vector<Point>& result) {
     double size = 0;
     for (int32_t i = 0; i < result.size(); ++i) {
-        double a = result[i].getX() - result[(i + 1) % result.size()].getX();
-        double b = result[i].getY() - result[(i + 1) % result.size()].getY();
-        size += pow(a * a + b * b, 0.5);
+        size += calculateDistance(result[i], result[(i + 1) % result.size()]);
     }
     return size;
 }
